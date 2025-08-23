@@ -1,10 +1,12 @@
-import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import CountryPage from "./pages/CountryPage";
 
 const App = () => {
+  const queryClient = new QueryClient();
   return (
-    <div>
-      <h1>Abhishek</h1>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <CountryPage />
+    </QueryClientProvider>
   );
 };
 
