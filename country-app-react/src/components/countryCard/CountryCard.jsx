@@ -1,9 +1,19 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { darkModeAtom } from "../../atoms/darkModeAtom";
+import { useAtom } from "jotai";
 
-const CountryCard = ({ getAllCountries, searchValue, regionValue }) => {
-  const [filteredCountries, setFilteredCountries] = useState<any[]>([]);
+const CountryCard = ({
+  getAllCountries,
+  searchValue,
+  regionValue,
+  isLoading,
+}) => {
+  const [filteredCountries, setFilteredCountries] = useState([]);
   const [countriesPerPage, setCountriesPerPage] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
+  const [darkMode] = useAtom(darkModeAtom);
 
   useEffect(() => {
     if (!Array.isArray(getAllCountries)) return;
@@ -12,12 +22,10 @@ const CountryCard = ({ getAllCountries, searchValue, regionValue }) => {
 
     // Filter by search value if present
     if (searchValue.trim() !== "") {
-      filtered = filtered.filter((country: any) =>
+      filtered = filtered.filter((country) =>
         country?.name?.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
-
-    console.log("regionValue", regionValue);
 
     // Filter by region only if it's not "none" or empty
     if (
@@ -26,7 +34,7 @@ const CountryCard = ({ getAllCountries, searchValue, regionValue }) => {
       regionValue.toLowerCase() !== "none"
     ) {
       filtered = filtered.filter(
-        (country: any) =>
+        (country) =>
           country?.region?.toLowerCase() === regionValue.toLowerCase()
       );
     }
@@ -34,10 +42,6 @@ const CountryCard = ({ getAllCountries, searchValue, regionValue }) => {
     setFilteredCountries(filtered);
     setCurrentPage(1);
   }, [searchValue, regionValue, getAllCountries]);
-
-  if (filteredCountries && filteredCountries.length === 0) {
-    return <div className="pl-64 pr-[13%]">No countries found</div>;
-  }
 
   const totalCountriesPerPage = Math.ceil(
     filteredCountries.length / countriesPerPage
@@ -66,7 +70,7 @@ const CountryCard = ({ getAllCountries, searchValue, regionValue }) => {
   // Pagination Range Generator
   const getPaginationRange = () => {
     const totalPages = totalCountriesPerPage;
-    const pageNumbers: (number | string)[] = [];
+    const pageNumbers = [];
 
     if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) {
@@ -96,12 +100,51 @@ const CountryCard = ({ getAllCountries, searchValue, regionValue }) => {
     return pageNumbers;
   };
 
+  const handleSelectedCountry = (country) => {
+    navigate(`/countryDetails/${country.cca3 || country.alpha3Code}`, {
+      state: { alpha3Code: country.alpha3Code },
+    });
+  };
+
+  if (isLoading && filteredCountries && filteredCountries.length === 0) {
+    return (
+      <div
+        className={`min-h-screen dark:bg-gray-900 ${
+          darkMode ? "" : "bg-gray-600"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <p
+                className={`mt-4 text-gray-600 dark:text-gray-300 ${
+                  darkMode ? "" : "text-white"
+                }`}
+              >
+                Loading country data...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="grid min-[1520px]:grid-cols-3 min-[1600px]:grid-cols-4 gap-12 pl-59 pr-[13%]">
+      <div
+        className={`grid min-[1520px]:grid-cols-3 min-[1600px]:grid-cols-4 gap-12 pl-59 pr-[13%] ${
+          darkMode ? "" : "bg-gray-600"
+        }`}
+      >
         {visibleCountries?.length > 0 &&
-          visibleCountries.map((country: any) => (
-            <div className="px-6 mb-20" key={country.name}>
+          visibleCountries.map((country) => (
+            <div
+              onClick={() => handleSelectedCountry(country)}
+              className={`px-6 pb-20 ${darkMode ? "" : "text-white"}`}
+              key={country.name}
+            >
               <div
                 className="cursor-pointer rounded shadow-xl ease-in-out w-72 h-96 
                      transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
@@ -132,7 +175,11 @@ const CountryCard = ({ getAllCountries, searchValue, regionValue }) => {
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex justify-between mb-20 space-x-4">
+      <div
+        className={`flex justify-between py-10 space-x-4 ${
+          darkMode ? "" : "bg-gray-600"
+        }`}
+      >
         {visibleCountries && (
           <div className="flex items-center space-x-2 pl-64 pr-[13%]">
             <button
@@ -192,7 +239,9 @@ const CountryCard = ({ getAllCountries, searchValue, regionValue }) => {
               setCurrentPage(1);
             }}
             value={countriesPerPage}
-            className="p-2 border rounded cursor-pointer"
+            className={`p-2 border rounded cursor-pointer ${
+              darkMode ? "" : "bg-gray-700 text-white border-none outline-none"
+            }`}
           >
             <option value={12}>12</option>
             <option value={24}>24</option>
